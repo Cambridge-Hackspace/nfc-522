@@ -1,0 +1,27 @@
+/* Self-hosted B612 Mono (latin subset), served by the device from flash.
+   Files are emitted to /font-400.woff2 and /font-700.woff2 by build.rs. */
+@font-face {
+  font-family: 'B612 Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'B612 Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/font-700.woff2') format('woff2');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    font-family: 'B612 Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}

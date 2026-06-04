@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/app.css">
+  <title>Saved</title>
+  <script>
+    (() => {
+      const SYSTEM_DARK = "afterdark";
+      const SYSTEM_LIGHT = "her";
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const systemTheme = () => (mq.matches ? SYSTEM_DARK : SYSTEM_LIGHT);
+      const theme = localStorage.getItem("nfc:theme") || systemTheme();
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+<body class="min-h-screen bg-base-100 text-base-content">
+  <header class="navbar bg-base-200 border-b border-base-300 px-4 sm:px-6">
+    <div class="flex-1">
+      <span class="font-bold tracking-[0.2em] text-accent">NFC&nbsp;SCAN</span>
+    </div>
+  </header>
+
+  <main class="px-4 py-10 sm:px-6">
+    <div class="mx-auto max-w-md space-y-4">
+      <div class="card bg-base-200 border border-base-300 shadow-lg">
+        <div class="card-body items-center gap-4 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="size-12 text-success" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <path d="m9 11 3 3L22 4"/>
+          </svg>
+          <h1 class="card-title">Saved &mdash; rebooting&hellip;</h1>
+          <p class="opacity-70">The device will restart and connect to your network.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

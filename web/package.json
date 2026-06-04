@@ -1,0 +1,16 @@
+{
+  "name": "neiam-nfc-522-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Captive-portal assets (Tailwind + DaisyUI) for neiam-nfc-522",
+  "scripts": {
+    "build": "tailwindcss -c tailwind.config.js -i input.css -o dist/app.css --minify",
+    "watch": "tailwindcss -c tailwind.config.js -i input.css -o dist/app.css --watch"
+  },
+  "dependencies": {
+    "@fontsource/b612-mono": "^5.2.6",
+    "@tailwindcss/forms": "^0.5.10",
+    "daisyui": "^4.12.24",
+    "tailwindcss": "^3.4.17"
+  }
+}

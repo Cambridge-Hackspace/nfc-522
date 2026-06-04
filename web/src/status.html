@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/app.css">
+  <title>NFC Scanner Status</title>
+  <script>
+    // Theme bootstrap (shared with the provisioning portal). Runs before paint.
+    (() => {
+      const SYSTEM_DARK = "afterdark";
+      const SYSTEM_LIGHT = "her";
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const systemTheme = () => (mq.matches ? SYSTEM_DARK : SYSTEM_LIGHT);
+      window.nfcSetTheme = (theme) => {
+        if (theme === "system") {
+          localStorage.removeItem("nfc:theme");
+          document.documentElement.setAttribute("data-theme", systemTheme());
+        } else {
+          localStorage.setItem("nfc:theme", theme);
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+      };
+      if (!document.documentElement.hasAttribute("data-theme")) {
+        window.nfcSetTheme(localStorage.getItem("nfc:theme") || "system");
+      }
+      mq.addEventListener("change", () => {
+        if (!localStorage.getItem("nfc:theme")) window.nfcSetTheme("system");
+      });
+    })();
+  </script>
+</head>
+<body class="min-h-screen bg-base-100 text-base-content">
+  <header class="navbar bg-base-200 border-b border-base-300 px-4 sm:px-6">
+    <div class="flex-1">
+      <span class="font-bold tracking-[0.2em] text-accent"><span id="brand-root"></span>NFC&nbsp;SCAN</span>
+    </div>
+    <div class="flex-none">
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2" aria-label="Choose theme">
+          <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+          </svg>
+          <span class="hidden sm:inline">Theme</span>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-200 border border-base-300 rounded-box z-10 mt-1 w-44 p-1 shadow-lg">
+          <li><button type="button" onclick="nfcSetTheme('system')">System</button></li>
+          <li>
+            <button type="button" onclick="nfcSetTheme('her')" class="flex items-center justify-between">
+              <span>Her</span>
+              <span class="size-3 rounded-full border border-base-content/20" data-theme="her" style="background: hsl(var(--p))"></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" onclick="nfcSetTheme('afterdark')" class="flex items-center justify-between">
+              <span>Afterdark</span>
+              <span class="size-3 rounded-full border border-base-content/20" data-theme="afterdark" style="background: hsl(var(--p))"></span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-4 py-10 sm:px-6">
+    <div class="mx-auto max-w-md space-y-4">
+      <div class="card bg-base-200 border border-base-300 shadow-lg">
+        <div class="card-body gap-4">
+          <h1 class="card-title text-accent">Recent scans</h1>
+          <div class="text-xs opacity-70 space-y-1">
+            <div>Device: <code id="dev">&hellip;</code></div>
+            <div>Broker: <code id="host">&hellip;</code></div>
+            <div>Topic root: <code id="root">&hellip;</code></div>
+          </div>
+          <p class="text-xs opacity-60">last <span id="n">0</span> reads</p>
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead>
+                <tr><th>#</th><th>UID</th><th>Ch</th><th>Type</th><th>ts&nbsp;(ms)</th></tr>
+              </thead>
+              <tbody id="rows">
+                <tr><td colspan="5" class="opacity-60">waiting for a scan&hellip;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const EMPTY = '<tr><td colspan="5" class="opacity-60">no scans yet</td></tr>';
+    async function refresh() {
+      try {
+        const r = await fetch('/api/scans');
+        const j = await r.json();
+        document.getElementById('dev').textContent = j.id;
+        document.getElementById('host').textContent = j.mqtt_host;
+        document.getElementById('root').textContent = j.topic_root;
+        // Prefix the navbar brand with the root, e.g. "CBZ NFC SCAN".
+        document.getElementById('brand-root').textContent = j.topic_root.toUpperCase() + ' ';
+        document.getElementById('n').textContent = j.scans.length;
+        const rows = document.getElementById('rows');
+        if (!j.scans.length) { rows.innerHTML = EMPTY; return; }
+        rows.innerHTML = '';
+        // Values are device-generated (hex UID, enum debug, integers) — safe to template.
+        j.scans.forEach((s, i) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            `<td>${i + 1}</td><td class="font-mono">${s.uid}</td>` +
+            `<td>${s.channel}</td><td>${s.type}</td><td>${s.ts_ms}</td>`;
+          rows.appendChild(tr);
+        });
+      } catch (_) { /* transient fetch error: keep the last good view */ }
+    }
+    refresh();
+    setInterval(refresh, 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/app.css">
+  <title>NFC Scanner Setup</title>
+  <script>
+    // Theme bootstrap (adapted from ../dms). Runs before paint to avoid a flash.
+    (() => {
+      const SYSTEM_DARK = "afterdark";
+      const SYSTEM_LIGHT = "her";
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const systemTheme = () => (mq.matches ? SYSTEM_DARK : SYSTEM_LIGHT);
+      window.nfcSetTheme = (theme) => {
+        if (theme === "system") {
+          localStorage.removeItem("nfc:theme");
+          document.documentElement.setAttribute("data-theme", systemTheme());
+        } else {
+          localStorage.setItem("nfc:theme", theme);
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+      };
+      if (!document.documentElement.hasAttribute("data-theme")) {
+        window.nfcSetTheme(localStorage.getItem("nfc:theme") || "system");
+      }
+      mq.addEventListener("change", () => {
+        if (!localStorage.getItem("nfc:theme")) window.nfcSetTheme("system");
+      });
+    })();
+  </script>
+</head>
+<body class="min-h-screen bg-base-100 text-base-content">
+  <header class="navbar bg-base-200 border-b border-base-300 px-4 sm:px-6">
+    <div class="flex-1">
+      <span class="font-bold tracking-[0.2em] text-accent"><span id="brand-root"></span>NFC&nbsp;SCAN</span>
+    </div>
+    <div class="flex-none">
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2" aria-label="Choose theme">
+          <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+          </svg>
+          <span class="hidden sm:inline">Theme</span>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-200 border border-base-300 rounded-box z-10 mt-1 w-44 p-1 shadow-lg">
+          <li><button type="button" onclick="nfcSetTheme('system')">System</button></li>
+          <li>
+            <button type="button" onclick="nfcSetTheme('her')" class="flex items-center justify-between">
+              <span>Her</span>
+              <span class="size-3 rounded-full border border-base-content/20" data-theme="her" style="background: hsl(var(--p))"></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" onclick="nfcSetTheme('afterdark')" class="flex items-center justify-between">
+              <span>Afterdark</span>
+              <span class="size-3 rounded-full border border-base-content/20" data-theme="afterdark" style="background: hsl(var(--p))"></span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-4 py-10 sm:px-6">
+    <div class="mx-auto max-w-md space-y-4">
+      <div class="card bg-base-200 border border-base-300 shadow-lg">
+        <div class="card-body gap-4">
+          <h1 class="card-title text-accent">Scanner Setup</h1>
+          <form method="post" action="/save" class="space-y-6">
+
+            <section class="space-y-3">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-secondary">Wi-Fi</h2>
+              <label class="form-control w-full">
+                <span class="label-text mb-1">Network (SSID)</span>
+                <input type="text" name="wifi_ssid" class="input input-bordered w-full"
+                       autocapitalize="off" autocorrect="off" required>
+              </label>
+              <label class="form-control w-full">
+                <span class="label-text mb-1">Password</span>
+                <input type="password" name="wifi_pass" class="input input-bordered w-full">
+              </label>
+              <p class="text-xs opacity-60">Leave the password blank for an open network.</p>
+            </section>
+
+            <section class="space-y-3">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-secondary">MQTT Broker</h2>
+              <div class="flex gap-3">
+                <label class="form-control grow">
+                  <span class="label-text mb-1">Host</span>
+                  <input type="text" name="mqtt_host" class="input input-bordered w-full"
+                         placeholder="192.168.1.10" required>
+                </label>
+                <label class="form-control w-24">
+                  <span class="label-text mb-1">Port</span>
+                  <input type="number" name="mqtt_port" value="1883" min="1" max="65535"
+                         class="input input-bordered w-full">
+                </label>
+              </div>
+              <label class="form-control w-full">
+                <span class="label-text mb-1">Username</span>
+                <input type="text" name="mqtt_username" class="input input-bordered w-full" autocapitalize="off">
+              </label>
+              <label class="form-control w-full">
+                <span class="label-text mb-1">Password</span>
+                <input type="password" name="mqtt_password" class="input input-bordered w-full">
+              </label>
+              <label class="label cursor-pointer justify-start gap-3 py-0">
+                <input type="checkbox" name="mqtt_use_tls" class="checkbox checkbox-primary checkbox-sm">
+                <span class="label-text">Use TLS (mqtts)</span>
+              </label>
+            </section>
+
+            <section class="space-y-3">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-secondary">Topic</h2>
+              <label class="form-control w-full">
+                <span class="label-text mb-1">Root prefix</span>
+                <input type="text" name="topic_root" id="topic_root" value="neiam" class="input input-bordered w-full">
+              </label>
+              <p class="text-xs opacity-60">
+                Scans publish to <code>&lt;root&gt;/nfc/&lt;device-id&gt;/scans/&lt;channel&gt;</code>.
+              </p>
+            </section>
+
+            <button type="submit" class="btn btn-primary w-full">Save &amp; Reboot</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    // Prefix the navbar brand with the topic root, e.g. "CBZ NFC SCAN", and keep
+    // it in sync as the field is edited.
+    (() => {
+      const input = document.getElementById('topic_root');
+      const brand = document.getElementById('brand-root');
+      const sync = () => {
+        const root = input.value.trim();
+        brand.textContent = root ? root.toUpperCase() + ' ' : '';
+      };
+      input.addEventListener('input', sync);
+      sync();
+    })();
+  </script>
+</body>
+</html>
