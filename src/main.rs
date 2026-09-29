@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
         }
         // Reset so the device boots normally again after new credentials are saved.
         config::clear_boot_fail_count(&nvs);
-        provisioning::run(peripherals.modem, sysloop, nvs, &id)?;
+        provisioning::run(peripherals.modem, sysloop, nvs, &id, pins.gpio8.into())?;
         return Ok(()); // provisioning::run reboots; this is unreachable.
     }
 
@@ -99,6 +99,7 @@ fn main() -> anyhow::Result<()> {
         id,
         peripherals.spi2,
         nfc_pins,
+        pins.gpio8.into(),
     ));
 
     if let Err(e) = result {

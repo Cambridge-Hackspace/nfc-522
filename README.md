@@ -124,12 +124,18 @@ Entered through the captive portal and stored in NVS as a JSON blob:
 
 ## Building & flashing
 
-Requires the Espressif Rust toolchain (via [`espup`](https://github.com/esp-rs/espup)),
-[`espflash`](https://github.com/esp-rs/espflash), and **Node.js + npm** (the build script
-generates the captive-portal CSS — see [Web assets](#web-assets--theming)).
+Requires nightly Rust with `rust-src` (pinned in `rust-toolchain.toml`; rustup installs it
+on the first build), [`espflash`](https://github.com/esp-rs/espflash), and **Node.js + npm**
+(the build script generates the captive-portal CSS — see [Web assets](#web-assets--theming)).
+The ESP32-C3 is RISC-V, so the Xtensa `esp` toolchain from `espup` isn't needed.
+
+Note: These notes are for Ubuntu 26.04
+Note: esp-idf needs python venv and will give you a friendly but long error message telling you to do something like `sudo apt install python3.14-venv` 
+Note: Also needs `cargo install ldproxy`
+Note: bindgen needs libclang: `sudo apt install libclang-dev`
+Note: The esp32 uses a virtual serial port (usually ttyACM0) which is in group `dialout` so add your user to that group `sudo usermod -a -G dialout $USER` and log off and back in
 
 ```bash
-. ~/export-esp.sh        # put the `esp` toolchain on PATH (once per shell)
 cargo build --release    # build firmware (build.rs also builds the portal assets)
 cargo run                # flash + monitor (runner = `espflash flash --monitor`)
 ```
@@ -241,4 +247,4 @@ build.rs             ESP-IDF env + web asset pipeline (Tailwind -> minify -> gzi
 ## Continuous integration
 
 `.github/workflows/rust_ci.yml` builds `--release` and runs `cargo fmt --check` and
-`cargo clippy -D warnings` on the esp toolchain.
+`cargo clippy -D warnings` on the nightly toolchain.

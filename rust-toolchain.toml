@@ -1,2 +1,6 @@
 [toolchain]
-channel = "esp"
+# The ESP32-C3 is RISC-V, so upstream nightly works; the custom Xtensa `esp`
+# toolchain from espup isn't needed. Nightly + rust-src is for `build-std`
+# (see .cargo/config.toml).
+channel = "nightly"
+components = ["rust-src", "rustfmt", "clippy"]

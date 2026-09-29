@@ -4,6 +4,7 @@
 
 mod dns;
 mod http;
+mod serial;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -11,6 +12,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::hal::delay::FreeRtos;
+use esp_idf_svc::hal::gpio::AnyIOPin;
 use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::hal::reset;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
@@ -27,6 +29,7 @@ pub fn run(
     sysloop: EspSystemEventLoop,
     nvs: EspDefaultNvsPartition,
     id: &str,
+    led: AnyIOPin<'static>,
 ) -> Result<()> {
     let ssid = setup_ssid(id);
     // Keep the AP handle alive for the duration of provisioning.
@@ -38,7 +41,11 @@ pub fn run(
 
     let saved = Arc::new(AtomicBool::new(false));
     // Keep the server alive; dropping it would unregister the handlers.
-    let _server = http::start(nvs, saved.clone())?;
+    let _server = http::start(nvs.clone(), saved.clone())?;
+
+    // Alternative to the AP + HTTP portal: configure directly over the same
+    // USB serial connection used for flashing (see provisioning page).
+    serial::run(nvs, saved.clone(), id.to_string(), led)?;
 
     log::info!("provisioning ready: join '{ssid}', config opens automatically");
 

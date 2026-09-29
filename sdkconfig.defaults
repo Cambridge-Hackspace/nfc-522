@@ -14,3 +14,19 @@ CONFIG_FREERTOS_IDLE_TASK_STACKSIZE=4096
 # that allocate large stack variables; or better yet - use 
 # `std::thread::Builder::new().stack_size(XXX)` for spawning
 CONFIG_PTHREAD_TASK_STACK_SIZE_DEFAULT=4096
+
+# If the watchdog timer times out the time can be adjusted here
+#CONFIG_ESP_TASK_WDT=y
+#CONFIG_ESP_TASK_WDT_TIMEOUT_S=5      # Timeout in seconds
+#CONFIG_ESP_TASK_WDT_PANIC=y           # Panic/reset on timeout
+
+# Route the primary console (stdio, and therefore the provisioning serial
+# protocol in src/provisioning/serial.rs) over the native USB-Serial-JTAG
+# peripheral instead of UART0. This board is programmed and used entirely
+# over that USB connector — UART0's RX/TX pins aren't wired to anything
+# reachable here, so leaving USB-Serial-JTAG as merely a secondary,
+# output-only console (the esp-idf default) meant stdin never received any
+# bytes. Confirmed on real hardware: without this, log lines occasionally
+# echoed through as the secondary console, but nothing written to the port
+# ever reached `std::io::stdin()`.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

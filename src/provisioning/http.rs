@@ -142,10 +142,8 @@ fn parse_config(body: &str) -> Config {
                 tls_seen = true;
                 cfg.mqtt_use_tls = matches!(value.as_str(), "on" | "true" | "1");
             }
-            "topic_root" => {
-                if !value.trim().is_empty() {
-                    cfg.topic_root = value.trim().to_string();
-                }
+            "topic_root" if !value.trim().is_empty() => {
+                cfg.topic_root = value.trim().to_string();
             }
             _ => {}
         }

@@ -3,7 +3,7 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - main
+      - master
     paths-ignore:
       - "**/README.md"
   pull_request:
@@ -36,6 +36,13 @@ jobs:
           default: true
           buildtargets: esp32c3
           ldproxy: true
+      # esp-idf-sys runs bindgen, which needs libclang. espup only ships one
+      # for Xtensa targets, so use the system LLVM on this RISC-V build.
+      - name: Setup libclang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev
+          echo "LIBCLANG_PATH=$(dirname "$(ls /usr/lib/llvm-*/lib/libclang.so | sort -V | tail -1)")" >> "$GITHUB_ENV"
       # build.rs runs Tailwind to generate the captive-portal assets, so Node is
       # required for every cargo invocation (build, clippy, and fmt builds).
       - name: Setup Node

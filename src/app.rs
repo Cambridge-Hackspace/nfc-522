@@ -12,6 +12,7 @@ use embassy_futures::select::select;
 use embassy_time::{Duration, Instant, Timer};
 use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::hal::gpio::AnyIOPin;
+use esp_idf_svc::hal::gpio::PinDriver;
 use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::hal::spi::SpiAnyPins;
 use esp_idf_svc::mqtt::client::{EventPayload, QoS};
@@ -48,7 +49,12 @@ pub async fn run<SPI: SpiAnyPins + 'static>(
     id: String,
     spi: SPI,
     pins: NfcPins,
+    led_builtin: AnyIOPin<'static>,
 ) -> Result<()> {
+    // Turn on the builtin led
+    let mut led_pin = PinDriver::output(led_builtin)?;
+    led_pin.set_low()?;
+
     // 1. WiFi (kept alive for the whole session).
     let _wifi = wifi::connect_sta(
         modem,
@@ -172,6 +178,7 @@ pub async fn run<SPI: SpiAnyPins + 'static>(
 
             for reader in readers.iter_mut() {
                 if let Some(event) = reader.poll() {
+                    let _ = led_pin.set_low();
                     let topic = cfg.scan_topic(&id, event.channel);
                     match serde_json::to_vec(&event) {
                         Ok(payload) => {
@@ -193,6 +200,7 @@ pub async fn run<SPI: SpiAnyPins + 'static>(
             }
 
             Timer::after(POLL_INTERVAL).await;
+            let _ = led_pin.set_high();
         }
     };
 
